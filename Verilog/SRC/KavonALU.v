@@ -9,14 +9,11 @@ module DFF16(clk,in,out);
        out = in;
 endmodule // DFF16
 
-module Mux16(a15, a14, a13, a12, a11, a10, a9, a8, a7, a6, a5, a4, a3, a2, a1, a0, s, b) ;
+module Mux16(a15, a14, a13, a12, a11, a10, a9, a8, a7, a6, a5, a4, a3, a2, a1, a0, s, b);
    parameter k = 16;
-   input [k-1:0] a15, a14, a13, a12, a11, a10, a9, a8, a7, a6, a5, a4, a3, a2, a1, a0 ;
-     // inputs
-   input [3:0] s ;
-    // one-hot select
-   output [k-1:0] b ;
-
+   input [k-1:0] a15, a14, a13, a12, a11, a10, a9, a8, a7, a6, a5, a4, a3, a2, a1, a0;
+   input [3:0] s; // 4-bit opcode
+   output [k-1:0] b;
       assign b = ({k{s[15]}} & a15) |
 		 ({k{s[14]}} & a14) |
 		 ({k{s[13]}} & a13) |
@@ -33,7 +30,6 @@ module Mux16(a15, a14, a13, a12, a11, a10, a9, a8, a7, a6, a5, a4, a3, a2, a1, a
 		 ({k{s[2]}} & a2) |
 		 ({k{s[1]}} & a1) |
 		 ({k{s[0]}} & a0) ;
-
    endmodule // Mux16
 
 `define NOOP 4'b0000
@@ -55,27 +51,27 @@ module ALU(clk, clear, input1, input2, opcode, out);
    input [3:0] 	 opcode;
    output [w-1:0] out;
    wire [w-1:0] next, last_res;
-   //reg 	[w-1:0] next;
    
    DFF16 #(w) last_output(clk, next, last_res);
    
    wire [w-1:0] modeNOOP = last_res;
-   wire [15:0] add_val = input1 + input2;
-   wire [15:0] sub_val = input1 - input2; //(has_last_res ? last_res - input1 :
+   wire [w-1:0] add_val = input1 + input2;
+   wire [w-1:0] sub_val = input1 - input2; //(has_last_res ? last_res - input1 :
    wire signed [31:0] product = input1 * input2;
-   wire [15:0] 	      quotient = input1 / input2;
-   wire [w-1:0]       and_val = input1 & input2;
-   wire [w-1:0]       or_val = input1 | input2;
-   wire [w-1:0]       xor_val = input1 ^ input2;
-   wire [w-1:0]       not_val = ~input1;
-   wire [w-1:0]       muxPORT9; // UNUSED INPUT
-   wire [w-1:0]       muxPORT10;// UNUSED INPUT
-   wire [w-1:0]       muxPORT11;// UNUSED INPUT
-   wire [w-1:0]       muxPORT12;// UNUSED INPUT
-   wire [w-1:0]       muxPORT13;// UNUSED INPUT
-   wire [w-1:0]       muxPORT14;// UNUSED INPUT
-   wire [w-1:0]       modeRESET;
+   wire [w-1:0] quotient = input1 / input2;
+   wire [w-1:0] and_val = input1 & input2;
+   wire [w-1:0] or_val = input1 | input2;
+   wire [w-1:0] xor_val = input1 ^ input2;
+   wire [w-1:0] not_val = ~input1;
+   wire [w-1:0] muxPORT9; // UNUSED INPUT
+   wire [w-1:0] muxPORT10;// UNUSED INPUT
+   wire [w-1:0] muxPORT11;// UNUSED INPUT
+   wire [w-1:0] muxPORT12;// UNUSED INPUT
+   wire [w-1:0] muxPORT13;// UNUSED INPUT
+   wire [w-1:0] muxPORT14;// UNUSED INPUT
+   wire [w-1:0] modeRESET;
 
+   // *** This does not seem to work so commented out. ***
      //Mux16 choice(add_val, sub_val, product[15:0], and_val, or_val, xor_val, not_val, 8'b00000000,
    /**
      Mux16 choice(modeNOOP, add_val, sub_val, product[15:0], quotient, and_val, or_val, xor_val, not_val, muxPORT9, muxPORT10, muxPORT11, muxPORT12, muxPORT13, muxPORT14, modeRESET,
