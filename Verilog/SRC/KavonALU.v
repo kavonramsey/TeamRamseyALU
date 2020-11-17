@@ -12,7 +12,7 @@ endmodule // DFF16
 module Mux16(a15, a14, a13, a12, a11, a10, a9, a8, a7, a6, a5, a4, a3, a2, a1, a0, s, b);
    parameter k = 16;
    input [k-1:0] a15, a14, a13, a12, a11, a10, a9, a8, a7, a6, a5, a4, a3, a2, a1, a0;
-   input [3:0] s; // 4-bit opcode
+   input [9:0] s; // 4-bit opcode
    output [k-1:0] b;
       assign b = ({k{s[15]}} & a15) |
 		 ({k{s[14]}} & a14) |
@@ -69,7 +69,7 @@ module ALU(clk, clear, input1, input2, opcode, out);
    wire [w-1:0] muxPORT12;// UNUSED INPUT
    wire [w-1:0] muxPORT13;// UNUSED INPUT
    wire [w-1:0] muxPORT14;// UNUSED INPUT
-   wire [w-1:0] modeRESET;
+   wire [w-1:0] modeRESET = 16'b0000000000000000; //Set DFF to all 0s
 
    // *** This does not seem to work so commented out. ***
      //Mux16 choice(add_val, sub_val, product[15:0], and_val, or_val, xor_val, not_val, 8'b00000000,
@@ -87,7 +87,18 @@ module ALU(clk, clear, input1, input2, opcode, out);
 		  (opcode == `RESET) & ~clear,
 		  clear}, next);
    **/
-   Mux16 choice(modeNOOP, add_val, sub_val, product[15:0], quotient, and_val, or_val, xor_val, not_val, muxPORT9, muxPORT10, muxPORT11, muxPORT12, muxPORT13, muxPORT14, modeRESET, opcode, next);
+   //Mux16 choice(modeNOOP, add_val, sub_val, product[15:0], quotient, and_val, or_val, xor_val, not_val, muxPORT9, muxPORT10, muxPORT11, muxPORT12, muxPORT13, muxPORT14, modeRESET, opcode, next);
+   Mux16 choice(modeNOOP, add_val, sub_val, product[15:0], quotient, and_val, or_val, xor_val, not_val, muxPORT9, muxPORT10, muxPORT11, muxPORT12, muxPORT13, muxPORT14, modeRESET, 
+		{(opcode == `NOOP),
+		 (opcode == `ADD),
+		 (opcode == `SUB),
+		 (opcode == `MULT),
+		 (opcode == `DIV),
+		 (opcode == `AND),
+		 (opcode == `OR),
+		 (opcode == `XOR),
+		 (opcode == `NOT),
+		 (opcode == `RESET)}, next);
 
    assign out = next;
 
@@ -128,7 +139,7 @@ module TestBench;
 	$display("-----+-----+------------------------+------------------------+------------+-----------------------+-------------");
 	    forever
 	      begin
-		 $display("%b    |%b    |%b (%d)|%b (%d)|%b (%s)|%b (%d)|", clk, clear, input1, input1, input2, input2, opcode, (opcode==4'b0000 ?"NO-OP":(opcode==4'b0001 ?"ADD":(opcode==4'b0010 ?"SUB":(opcode==4'b0011 ?"MULT":(opcode==4'b0100 ?"DIVID":(opcode==4'b0101 ?"AND":(opcode==4'b0110 ?"OR":(opcode==4'b0111 ?"XOR":(opcode==4'b1000 ? "NOT":(opcode==4'b1111 ? "RESET":"Nil")))))))))), out, out);
+		 $display("%b    |%b    |%b (%d)|%b (%d)|%b (%s)|%b (%d)|", clk, clear, input1, input1, input2, input2, opcode, (opcode==4'b0000 ?"NO-OP":(opcode==4'b0001 ?"ADD":(opcode==4'b0010 ?"SUB":(opcode==4'b0011 ?"MULT":(opcode==4'b0100 ?"DIV":(opcode==4'b0101 ?"AND":(opcode==4'b0110 ?"OR":(opcode==4'b0111 ?"XOR":(opcode==4'b1000 ? "NOT":(opcode==4'b1111 ? "RESET":"Nil")))))))))), out, out);
 		 
 		 #5 clk = 1;
 		 #5 clk = 0;
@@ -137,167 +148,58 @@ module TestBench;
 
      // input stimuli
      initial begin
+	#6
+	clear = 0;
+	input1=16'b0000000000000000;
+	input2=16'b0000000000000001;
+	opcode=`NOOP;
+	#10
 	clear=0;
-	input1=16'b0000000000000000;
-	input2=16'b0000000000000000;
-	opcode=`ADD;
-
-	#0
-	#10  clear=1;
-	input1=16'b0000000000000000;
-	input2=16'b0000000000000000;
-	opcode=`ADD;
-
-	#10  clear=0;
 	input1=16'b0000000000000001;
 	input2=16'b0000000000000001;
 	opcode=`ADD;
-
-	#10  clear=0;
-	input1=16'b0000000000000001;
-	input2=16'b0000000000000000;
-	opcode=`ADD;
-
-	#50
-	#10  clear=1;
-	input1=16'b0000000000000000;
-	input2=16'b0000000000000000;
-	opcode=`SUB;
-
-	#10  clear=0;
-	input1=16'b0000000000001111;
+	#10
+	  clear = 0;
+	input1=16'b0000000000000011;
 	input2=16'b0000000000000001;
 	opcode=`SUB;
-
-	#10  clear=0;
-	input1=16'b0000000000000001;
-	input2=16'b0000000000000000;
-	opcode=`SUB;
-
-	#50
-	#10  clear=1;
-	input1=16'b0000000000000000;
-	input2=16'b0000000000000000;
-	opcode=`MULT;
-
-	#10  clear=0;
+	#10
+	  clear=0;
 	input1=16'b0000000000000010;
 	input2=16'b0000000000000010;
 	opcode=`MULT;
-
-	#10  clear=0;
-	input1=16'b0000000000000010;
-	input2=16'b0000000000000000;
-	opcode=`MULT;
-
-	#50
-	#10  clear=1;
-	input1=16'b0000000000000000;
-	input2=16'b0000000000000000;
+	#10
+	  clear=0;
+	input1=16'b0000000000001000;
+	input2=16'b0000000000000010;
+	opcode=`DIV;
+	#10
+	  clear=0;
+	input1=16'b0000000000001111;
+	input2=16'b0000000000001001;
 	opcode=`AND;
-
-	#10  clear=0;
-	input1=16'b1111111100000000;
-	input2=16'b0111111000000000;
-	opcode=`AND;
-
-	#10  clear=0;
-	input1=16'b0000001111000000;
-	input2=16'b0000000000000000;
-	opcode=`AND;
-
-	#10  clear=0;
-	input1=16'b0000000110000000;
-	input2=16'b0000000000000000;
-	opcode=`AND;
-
-	#10  clear=0;
-	input1=16'b0000000000000000;
-	input2=16'b0000000000000000;
-	opcode=`AND;
-
-	#10  clear=1;
-	input1=16'b0000000000000000;
-	input2=16'b0000000000000000;
+	#10
+	  clear=0;
+	input1=16'b0000000000001010;
+	input2=16'b0000000000000101;
 	opcode=`OR;
-
-	#10  clear=0;
-	input1=16'b1000000000000000;
-	input2=16'b0000000000000001;
-	opcode=`OR;
-
-	#10  clear=0;
-	input1=16'b0100000000000000;
-	input2=16'b0000000000000000;
-	opcode=`OR;
-
-	#10  clear=0;
-	input1=16'b0000000000000010;
-	input2=16'b0000000000000000;
-	opcode=`OR;
-
-	#10  clear=0;
-	input1=16'b0010000000000000;
-	input2=16'b0000000000000000;
-	opcode=`OR;
-
-	#10  clear=0;
-	input1=16'b0000000000000100;
-	input2=16'b0000000000000000;
-	opcode=`OR;
-
-	#10  clear=0;
-	input1=16'b0001000000000000;
-	input2=16'b0000000000000000;
-	opcode=`OR;
-
-	#10  clear=0;
+	#10
+	  clear=0;
+	input1=16'b0000000000001011;
+	input2=16'b0000000000001101;
+	opcode=`XOR;
+	#10
+	  clear=0;
+	input1=16'b1111111111111111;
+	input2=16'b1111111111111111;
+	opcode=`NOT;
+	#10
+	  clear=0;
 	input1=16'b0000100000000000;
 	input2=16'b0000000000000000;
-	opcode=`OR;
-
-	#10  clear=1;
-	input1=16'b0000000000000000;
-	input2=16'b0000000000000000;
-	opcode=`XOR;
-
-	#10  clear=0;
-	input1=16'b1100000000000000;
-	input2=16'b1111000000000000;
-	opcode=`XOR;
-
-	#10  clear=0;
-	input1=16'b0000001111000000;
-	input2=16'b0000000000000000;
-	opcode=`XOR;
-
-	#10  clear=0;
-	input1=16'b0000000000001111;
-	input2=16'b0000000000000000;
-	opcode=`XOR;
-
-	#10  clear=0;
-	input1=16'b0000000000000011;
-	input2=16'b0000000000000000;
-	opcode=`XOR;
-
-	#10  clear=1;
-	input1=16'b0000000000000000;
-	input2=16'b0000000000000000;
-	opcode=`NOT;
-
-	#10  clear=0;
-	input1=16'b0000000000001111;
-	input2=16'b0000000000000000;
-	opcode=`NOT;
-
-	#10  clear=0;
-	input1=16'b0000000000000000;
-	input2=16'b0000000000000000;
-	opcode=`NOT;
-
-	#30
-
+	opcode=`RESET;
+	#10
+ 
 	  $stop ;
 
      end // initial begin
