@@ -12,7 +12,7 @@ endmodule // DFF16
 module Mux16(a15, a14, a13, a12, a11, a10, a9, a8, a7, a6, a5, a4, a3, a2, a1, a0, s, b);
    parameter k = 16;
    input [k-1:0] a15, a14, a13, a12, a11, a10, a9, a8, a7, a6, a5, a4, a3, a2, a1, a0;
-   input [9:0] s; // 4-bit opcode
+   input [3:0] s; // 4-bit opcode 
    output [k-1:0] b;
       assign b = ({k{s[15]}} & a15) |
 		 ({k{s[14]}} & a14) |
