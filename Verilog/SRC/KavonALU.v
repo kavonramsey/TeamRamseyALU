@@ -1,3 +1,4 @@
+// DFF16 is the (ACC)
 module DFF16(clk,in,out);
    parameter n=16;
    //width
@@ -9,6 +10,7 @@ module DFF16(clk,in,out);
        out = in;
 endmodule // DFF16 (ACC)
 
+//Mux16 (choice) receives all functions MULTIPLEXER
 module Mux16(a15, a14, a13, a12, a11, a10, a9, a8, a7, a6, a5, a4, a3, a2, a1, a0, s, b);
    parameter k = 16;
    input [k-1:0] a15, a14, a13, a12, a11, a10, a9, a8, a7, a6, a5, a4, a3, a2, a1, a0;
@@ -58,7 +60,7 @@ module MULT(input1,input2,out);
    input [w-1:0] input1, input2;
    output [31:0] out;
    assign out = input1 * input2;
-endmodule // 16 bit mult
+endmodule // 16 bit mult (32-bit output)
 
 module DIV(input1,input2,out);
    parameter w=16;
@@ -139,11 +141,11 @@ module ALU(clk, input1, input2, opcode, out);
    ADD adder(input1,input2,add_val);  //ADD module performs 16-bit add
    SUB subtractor(input1,input2,sub_val); // SUB module performs 16-bit subtraction
    MULT multiply(input1,input2,product); // MULT module performs 32-bit multiplication
-   DIV divider(input1,input2,quotient);
-   AND ander(input1,input2,and_val);
-   OR mor(input1,input2,or_val);
-   XOR mxor(input1,input2,xor_val);
-   NOT mnot(input1, not_val);
+   DIV divider(input1,input2,quotient); // DIV module performs 16-bit division
+   AND ander(input1,input2,and_val); // AND module ands inputs (16-bit)
+   OR mor(input1,input2,or_val); // OR module ORs (16-bit) inputs
+   XOR mxor(input1,input2,xor_val); // XOR module is exclusive or (16-bit)
+   NOT mnot(input1, not_val); // NOT module inverts input 1 (16-bit)
 
    /**
    wire [w-1:0] modeNOOP = result; //modeNOOP (NO-OP) get ACC (Q)
