@@ -7,7 +7,7 @@ module DFF16(clk,in,out);
    reg [n-1:0] out;
      always @(posedge clk)
        out = in;
-endmodule // DFF16
+endmodule // DFF16 (ACC)
 
 module Mux16(a15, a14, a13, a12, a11, a10, a9, a8, a7, a6, a5, a4, a3, a2, a1, a0, s, b);
    parameter k = 16;
@@ -37,8 +37,65 @@ module Mux16(a15, a14, a13, a12, a11, a10, a9, a8, a7, a6, a5, a4, a3, a2, a1, a
 	  default:b=4'b0000; //DEFAULT NOOP
 	endcase // case (s)
      end // always @ (*)
-   endmodule // Mux16
+   endmodule // Mux16 (Multiplexer)
 
+module ADD(input1,input2,out);
+   parameter w=16;
+   input [w-1:0] input1, input2;
+   output [w-1:0] out;
+   assign out = input1 + input2;
+   endmodule //16-bit adder
+
+module SUB(input1,input2,out);
+   parameter w=16;
+   input [w-1:0] input1, input2;
+   output [w-1:0] out;
+   assign out = input1 - input2;
+endmodule // SUB
+
+module MULT(input1,input2,out);
+ parameter w=16;
+   input [w-1:0] input1, input2;
+   output [31:0] out;
+   assign out = input1 * input2;
+endmodule // 16 bit mult
+
+module DIV(input1,input2,out);
+   parameter w=16;
+   input [w-1:0] input1, input2;
+   output [w-1:0] out;
+assign out = input1 / input2;
+endmodule // 16 bit DIV
+
+module AND(input1,input2,out);
+   parameter w=16;
+   input [w-1:0] input1, input2;
+   output [w-1:0] out;
+assign out = input1 & input2;
+endmodule // 16 bit AND
+
+module OR(input1,input2,out);
+   parameter w=16;
+   input [w-1:0] input1, input2;
+   output [w-1:0] out;
+assign out = input1 | input2;
+endmodule // 16 bit OR
+
+module XOR(input1,input2,out);
+   parameter w=16;
+   input [w-1:0] input1, input2;
+   output [w-1:0] out;
+assign out = input1 ^ input2;
+endmodule // 16 bit XOR
+
+module NOT(input1,out);
+   parameter w=16;
+   input [w-1:0] input1;
+   output [w-1:0] out;
+assign out = ~input1;
+endmodule // 16 bit OR
+   
+// These definitions are for readability. Can use name for testbench
 `define NOOP 4'b0000
 `define ADD 4'b0001
 `define SUB 4'b0010
@@ -52,16 +109,44 @@ module Mux16(a15, a14, a13, a12, a11, a10, a9, a8, a7, a6, a5, a4, a3, a2, a1, a
 
 module ALU(clk, input1, input2, opcode, out);
 
+   // NOTE: ALU is like breadboard
    parameter w = 16;
    input clk;
    input [w-1:0] input1, input2;
    input [3:0] 	 opcode;
    output [w-1:0] out;
-   wire [w-1:0] next, ACC;
+   wire [w-1:0] next, result; // next is D, result is Q
    
-   DFF16 #(w) stored_output(clk, next, ACC);
+   DFF16 #(w) ACC(clk, next, result);
+
+   wire [w-1:0] modeNOOP = result; //modeNOOP (NO-OP) get ACC (Q)
+   wire [w-1:0] add_val; //add_val (ADD) result
+   wire [w-1:0] sub_val; //sub_val (SUB) result
+   wire signed [31:0] product; //product (MULT) result
+   wire [w-1:0] quotient; //quotient (DIV) result
+   wire [w-1:0] and_val; //and_val (AND) result
+   wire [w-1:0] or_val; //or_val (OR) result
+   wire [w-1:0] xor_val; //xor_val (XOR) result
+   wire [w-1:0] not_val; //not_val (NOT) of input1
+   wire [w-1:0] muxPORT9; // UNUSED INPUT
+   wire [w-1:0] muxPORT10; // UNUSED INPUT
+   wire [w-1:0] muxPORT11; // UNUSED INPUT
+   wire [w-1:0] muxPORT12; // UNUSED INPUT
+   wire [w-1:0] muxPORT13; // UNUSED INPUT
+   wire [w-1:0] muxPORT14; // UNUSED INPUT
+   wire [w-1:0] modeRESET = 16'b0000000000000000; //Set DFF to all 0s (RESET)
    
-   wire [w-1:0] modeNOOP = ACC; //modeNOOP (NO-OP) get ACC (Q)
+   ADD adder(input1,input2,add_val);  //ADD module performs 16-bit add
+   SUB subtractor(input1,input2,sub_val); // SUB module performs 16-bit subtraction
+   MULT multiply(input1,input2,product); // MULT module performs 32-bit multiplication
+   DIV divider(input1,input2,quotient);
+   AND ander(input1,input2,and_val);
+   OR mor(input1,input2,or_val);
+   XOR mxor(input1,input2,xor_val);
+   NOT mnot(input1, not_val);
+
+   /**
+   wire [w-1:0] modeNOOP = result; //modeNOOP (NO-OP) get ACC (Q)
    wire [w-1:0] add_val = input1 + input2; //add_val (ADD) result
    wire [w-1:0] sub_val = input1 - input2; //sub_val (SUB) result
    wire signed [31:0] product = input1 * input2; //product (MULT) result
@@ -76,8 +161,9 @@ module ALU(clk, input1, input2, opcode, out);
    wire [w-1:0] muxPORT12; // UNUSED INPUT
    wire [w-1:0] muxPORT13; // UNUSED INPUT
    wire [w-1:0] muxPORT14; // UNUSED INPUT
-   wire [w-1:0] modeRESET = 16'b0000000000000000; //Set DFF to all 0s
-
+   wire [w-1:0] modeRESET = 16'b0000000000000000; //Set DFF to all 0s (RESET)
+**/
+    
    Mux16 choice(modeNOOP, add_val, sub_val, product[15:0], quotient, and_val, or_val, xor_val, not_val, muxPORT9, muxPORT10, muxPORT11, muxPORT12, muxPORT13, muxPORT14, modeRESET, opcode, next);
    
    assign out = next;
@@ -85,7 +171,7 @@ module ALU(clk, input1, input2, opcode, out);
 endmodule // ALU
 
 module TestBench;
-   reg clk, clear;
+   reg clk;
    parameter n=16;
    reg [n-1:0] input1, input2;
    reg [3:0]   opcode;
@@ -110,69 +196,54 @@ module TestBench;
      // input stimuli
      initial begin
 	#6
-	//clear = 0;
+	
 	input1=16'b0000000000000000;
 	input2=16'b0000000000000001;
 	opcode=`NOOP;
 	#10
-	//clear=0;
+	
 	input1=16'b0000000000000001;
 	input2=16'b0000000000000001;
 	opcode=`ADD;
 	#10
-	  //clear = 0;
+	 
 	input1=16'b0000000000000011;
 	input2=16'b0000000000000001;
 	opcode=`SUB;
 	#10
-	  //clear=0;
+	
 	input1=16'b0000000000000010;
 	input2=16'b0000000000000010;
 	opcode=`MULT;
 	#10
-	  //clear=0;
+	
 	input1=16'b0000000000001000;
 	input2=16'b0000000000000010;
 	opcode=`DIV;
 	#10
-	  //clear=0;
+	
 	input1=16'b0000000000001111;
 	input2=16'b0000000000001001;
 	opcode=`AND;
 	#10
-	  //clear=0;
+	
 	input1=16'b0000000000001010;
 	input2=16'b0000000000000101;
 	opcode=`OR;
 	#10
-	  //clear=0;
+	
 	input1=16'b0000000000001011;
 	input2=16'b0000000000001101;
 	opcode=`XOR;
 	#10
-	  //clear=0;
+	
 	input1=16'b1111111111111111;
 	input2=16'b1111111111111111;
 	opcode=`NOT;
 	#10
-	  //clear=0;
+	
 	input1=16'b0000100000000000;
 	input2=16'b0000000000000000;
-	opcode=`RESET;
-	#10
-	  //clear=0;
-	input1=16'b0000000000001000;
-	input2=16'b0000000000001000;
-	opcode=`MULT;
-	#10
-	  //clear=0;
-	input1=16'b1111111111111111;
-	input2=16'b0000111100001111;
-	opcode=`NOOP;
-	#10
-	  //clear=0;
-	input1=16'b0000000000001111;
-	input2=16'b0000111100001111;
 	opcode=`RESET;
 	#10
  
