@@ -41,61 +41,61 @@ module Mux16(a15, a14, a13, a12, a11, a10, a9, a8, a7, a6, a5, a4, a3, a2, a1, a
      end // always @ (*)
    endmodule // Mux16 (Multiplexer)
 
-module ADD(input1,input2,out);
+module ADD(input1,input2,out); // ADD adder returns add_val
    parameter w=16;
    input [w-1:0] input1, input2;
    output [w-1:0] out;
    assign out = input1 + input2;
    endmodule //16-bit adder
 
-module SUB(input1,input2,out);
+module SUB(input1,input2,out); //SUB subtractor returns sub_val
    parameter w=16;
    input [w-1:0] input1, input2;
    output [w-1:0] out;
    assign out = input1 - input2;
-endmodule // SUB
+endmodule // 16-bit subtractor
 
-module MULT(input1,input2,out);
+module MULT(input1,input2,out); //MULT product returns product which will be truncated
  parameter w=16;
    input [w-1:0] input1, input2;
    output [31:0] out;
    assign out = input1 * input2;
 endmodule // 16 bit mult (32-bit output)
 
-module DIV(input1,input2,out);
+module DIV(input1,input2,out); //DIV quotient returns quotient
    parameter w=16;
    input [w-1:0] input1, input2;
    output [w-1:0] out;
 assign out = input1 / input2;
 endmodule // 16 bit DIV
 
-module AND(input1,input2,out);
+module AND(input1,input2,out); //AND ander returns and_val
    parameter w=16;
    input [w-1:0] input1, input2;
    output [w-1:0] out;
 assign out = input1 & input2;
 endmodule // 16 bit AND
 
-module OR(input1,input2,out);
+module OR(input1,input2,out); //OR mor returns or_val
    parameter w=16;
    input [w-1:0] input1, input2;
    output [w-1:0] out;
 assign out = input1 | input2;
 endmodule // 16 bit OR
 
-module XOR(input1,input2,out);
+module XOR(input1,input2,out); //XOR mxor returns xor_val
    parameter w=16;
    input [w-1:0] input1, input2;
    output [w-1:0] out;
 assign out = input1 ^ input2;
 endmodule // 16 bit XOR
 
-module NOT(input1,out);
+module NOT(input1,out); // NOT mnot returns not_val
    parameter w=16;
    input [w-1:0] input1;
    output [w-1:0] out;
 assign out = ~input1;
-endmodule // 16 bit OR
+endmodule // 16 bit NOT
    
 // These definitions are for readability. Can use name for testbench
 `define NOOP 4'b0000
@@ -200,6 +200,11 @@ module TestBench;
 	#6
 	
 	input1=16'b0000000000000000;
+	input2=16'b0000000000000000;
+	opcode=`RESET;
+	#10
+	  
+	input1=16'b0000000000000000;
 	input2=16'b0000000000000001;
 	opcode=`NOOP;
 	#10
@@ -212,6 +217,11 @@ module TestBench;
 	input1=16'b0000000000000011;
 	input2=16'b0000000000000001;
 	opcode=`SUB;
+	#10
+
+	input1=16'b0000000000000011;
+	input2=16'b0000000000000001;
+	opcode=`NOOP;
 	#10
 	
 	input1=16'b0000000000000010;
@@ -233,6 +243,11 @@ module TestBench;
 	input2=16'b0000000000000101;
 	opcode=`OR;
 	#10
+
+	input1=16'b0000110011001100;
+	input2=16'b1111111111111111;
+	opcode=`NOOP;
+	#10
 	
 	input1=16'b0000000000001011;
 	input2=16'b0000000000001101;
@@ -248,6 +263,37 @@ module TestBench;
 	input2=16'b0000000000000000;
 	opcode=`RESET;
 	#10
+
+	input1=16'b0000111100001111;
+	input2=16'b1111000011110000;
+	opcode=`AND;
+	#10
+
+	input1=16'b0000000000001010;
+	input2=16'b0000000000000101;
+	opcode=`ADD;
+	#10
+
+	input1=16'b0000000000001010;
+	input2=16'b0000000000000000;
+	opcode=`NOT;
+	#10
+	  
+	input1=16'b0000000000000011;
+	input2=16'b0000000000000100;
+	opcode=`ADD;
+	#10
+
+	input1=16'b1010101010101010;
+	input2=16'b0000111100001111;
+	opcode=`NOOP;
+	#10
+	
+	input1=16'b1010101010101010;
+	input2=16'b0000111100001111;
+	opcode=`RESET;
+	#10
+	
  
 	  $stop ;
 
