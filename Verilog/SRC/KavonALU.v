@@ -147,6 +147,7 @@ module ALU(clk, input1, input2, opcode, out);
    XOR mxor(input1,input2,xor_val); // XOR module is exclusive or (16-bit)
    NOT mnot(input1, not_val); // NOT module inverts input 1 (16-bit)
 
+  // THIS CAN BE USED FOR DEBUGGING. I STARTED FROM SMALL AND WENT BIG
    /**
    wire [w-1:0] modeNOOP = result; //modeNOOP (NO-OP) get ACC (Q)
    wire [w-1:0] add_val = input1 + input2; //add_val (ADD) result
